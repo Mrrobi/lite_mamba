@@ -7,7 +7,7 @@ README = (ROOT / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="lite-mamba",
-    version="0.1.2",
+    version="0.1.3",
     description="Pure-PyTorch lightweight Mamba with multi-dilated causal conv front-end",
     long_description=README,
     long_description_content_type="text/markdown",

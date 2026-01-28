@@ -5,7 +5,7 @@ A minimal, pure-PyTorch version of Mamba with a multi-dilated causal depthwise c
 ## Install
 ```bash
 pip install torch einops
-pip install .  # from repo root containing pyproject.toml
+pip install lite-mamba
 ```
 
 ## Usage
