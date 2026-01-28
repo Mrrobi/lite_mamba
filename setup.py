@@ -7,15 +7,15 @@ README = (ROOT / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="lite-mamba",
-    version="0.1.1",
+    version="0.1.2",
     description="Pure-PyTorch lightweight Mamba with multi-dilated causal conv front-end",
     long_description=README,
     long_description_content_type="text/markdown",
     author="Your Name",
-    url="https://github.com/yourname/lite-mamba",
+    url="https://github.com/Mrrobi/lite_mamba",
     project_urls={
-        "Homepage": "https://github.com/yourname/lite-mamba",
-        "Source": "https://github.com/yourname/lite-mamba",
+        "Homepage": "https://github.com/Mrrobi/lite_mamba",
+        "Source": "https://github.com/Mrrobi/lite_mamba",
     },
     packages=find_packages(exclude=("tests", "docs")),
     python_requires=">=3.9",
