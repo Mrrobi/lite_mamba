@@ -1,35 +1,32 @@
-name: publish
+name: Publish Python Package
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
 
-permissions:
-  contents: read
-
-  jobs:
-  build-and-publish:
+jobs:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
 
-      - name: Install build tooling
-        run: pip install --upgrade pip build twine
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine
 
-      - name: Build distributions
-        run: python -m build
+    - name: Build the package
+      run: python setup.py sdist bdist_wheel
 
-      - name: Verify metadata
-        run: twine check dist/*
-
-      - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: twine upload dist/*
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: twine upload dist/*
