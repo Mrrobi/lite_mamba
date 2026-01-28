@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Pure-PyTorch lightweight Mamba with multi-dilated causal conv front-end"
 readme = "README.md"
 authors = [{ name = "Your Name" }]
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 requires-python = ">=3.9"
 dependencies = [
   "torch>=2.0",
@@ -22,6 +22,3 @@ Source = "https://github.com/yourname/lite-mamba"
 [tool.setuptools]
 packages = ["lite_mamba"]
 include-package-data = false
-
-[tool.setuptools.package-dir]
-"" = "."
