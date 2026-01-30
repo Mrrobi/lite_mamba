@@ -1,12 +1,11 @@
 import torch
 
-from lite_mamba import Mamba, PTCNMamba, STCNMamba, DPWCMamba
+from lite_mamba import PTCNMamba, STCNMamba, DPWCMamba
 
 
 def _build_models(d_model=32, d_state=8, d_conv=3, conv_dilations=(1, 2, 4)):
     kwargs = dict(d_model=d_model, d_state=d_state, d_conv=d_conv, conv_dilations=conv_dilations)
     return [
-        Mamba(**kwargs),
         PTCNMamba(**kwargs),
         STCNMamba(**kwargs),
         DPWCMamba(**kwargs),
