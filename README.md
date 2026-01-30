@@ -19,6 +19,11 @@ y = m(x)
 print(y.shape)  # (2, 128, 512)
 ```
 
+### Conv front-end variants
+- `PTCNMamba`: parallel TCN branches (same as `Mamba`).
+- `STCNMamba`: stacked TCN layers (sequential dilated convs).
+- `DPWCMamba`: depthwise + pointwise conv branches.
+
 ## API quick reference
 `Mamba(d_model, d_state=16, d_conv=4, conv_dilations=(1,), expand=2, dt_rank="auto", dt_min=0.001, dt_max=0.1, dt_init="random", dt_scale=1.0, dt_init_floor=1e-4, conv_bias=True, bias=False, use_fast_path=False, layer_idx=None, device=None, dtype=None)`
 
