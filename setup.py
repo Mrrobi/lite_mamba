@@ -1,13 +1,14 @@
 from pathlib import Path
 
 from setuptools import find_packages, setup
+from lite_mamba import __version__
 
 ROOT = Path(__file__).parent
 README = (ROOT / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="lite-mamba",
-    version="0.1.5",
+    version=__version__,
     description="Pure-PyTorch lightweight Mamba with multi-dilated causal conv front-end",
     long_description=README,
     long_description_content_type="text/markdown",

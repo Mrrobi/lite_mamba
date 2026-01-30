@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-setup_py="setup.py"
+init_py="lite_mamba/__init__.py"
 
-if [[ ! -f "$setup_py" ]]; then
-  echo "pre-commit: $setup_py not found; cannot enforce change."
+if [[ ! -f "$init_py" ]]; then
+  echo "pre-commit: $init_py not found; cannot enforce change."
   exit 1
 fi
 
-if ! git diff --cached --name-only --diff-filter=ACMR | grep -qx "$setup_py"; then
-  echo "pre-commit: commit must include a staged change to $setup_py."
-  echo "pre-commit: stage a change to $setup_py before committing."
+if ! git diff --cached --name-only --diff-filter=ACMR | grep -qx "$init_py"; then
+  echo "pre-commit: commit must include a staged change to $init_py."
+  echo "pre-commit: stage a change to $init_py before committing."
   exit 1
 fi
 
