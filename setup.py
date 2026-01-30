@@ -1,14 +1,24 @@
 from pathlib import Path
 
+import re
+
 from setuptools import find_packages, setup
-from lite_mamba import __version__
 
 ROOT = Path(__file__).parent
+INIT_PY = ROOT / "lite_mamba" / "__init__.py"
 README = (ROOT / "README.md").read_text(encoding="utf-8")
+
+
+def read_version() -> str:
+    text = INIT_PY.read_text(encoding="utf-8")
+    match = re.search(r'^__version__\s*=\s*"([^"]+)"\s*$', text, re.M)
+    if not match:
+        raise RuntimeError("Unable to find __version__ in lite_mamba/__init__.py")
+    return match.group(1)
 
 setup(
     name="lite-mamba",
-    version=__version__,
+    version=read_version(),
     description="Pure-PyTorch lightweight Mamba with multi-dilated causal conv front-end",
     long_description=README,
     long_description_content_type="text/markdown",
