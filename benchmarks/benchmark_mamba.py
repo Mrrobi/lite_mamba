@@ -3,7 +3,7 @@ import time
 
 import torch
 
-from lite_mamba import Mamba, PTCNMamba, STCNMamba, DPWCMamba
+from lite_mamba import PTCNMamba, STCNMamba, DPWCMamba
 
 
 def _sync_if_cuda(device):
@@ -51,7 +51,6 @@ def main():
         device=device,
     )
     models = [
-        ("Mamba", Mamba(**kwargs)),
         ("PTCNMamba", PTCNMamba(**kwargs)),
         ("STCNMamba", STCNMamba(**kwargs)),
         ("DPWCMamba", DPWCMamba(**kwargs)),
