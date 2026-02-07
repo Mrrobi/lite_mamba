@@ -48,7 +48,8 @@ def causal_dilated_conv1d_update(x, conv_state, weight, bias=None, activation=No
     conv_state.copy_(torch.roll(conv_state, shifts=-1, dims=-1))
     conv_state[:, :, -1] = x
 
-    idx = torch.arange(0, weight.shape[-1], device=conv_state.device) * dilation
+    # Align taps so weight[0] multiplies the oldest sample and weight[-1] the newest.
+    idx = torch.arange(weight.shape[-1] - 1, -1, -1, device=conv_state.device) * dilation
     pos = conv_state.shape[-1] - 1 - idx
     values = conv_state.index_select(-1, pos)
     y = torch.sum(values * weight.unsqueeze(0), dim=-1)

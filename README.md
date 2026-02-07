@@ -13,7 +13,7 @@ pip install lite-mamba
 
 ## Usage
 ```python
-from lite_mamba import Mamba
+from lite_mamba import Mamba, PTCNMamba, STCNMamba, DPWCMamba
 import torch
 
 x = torch.randn(2, 128, 512)  # (batch, seq, d_model)
@@ -23,9 +23,28 @@ print(y.shape)  # (2, 128, 512)
 ```
 
 ### Conv front-end variants
-- `PTCNMamba`: parallel TCN branches (same as `Mamba`).
-- `STCNMamba`: stacked TCN layers (sequential dilated convs).
-- `DPWCMamba`: depthwise + pointwise conv branches.
+- `PTCNMamba`: identical to `Mamba`, mixes parallel dilated depthwise conv branches via learned softmax gates.
+- `STCNMamba`: runs the same depthwise conv layers in sequence (no gating); each branch output feeds the next to create a deterministic dilation stack.
+- `DPWCMamba`: pairs each depthwise branch with a pointwise (1×1) conv before the gating mix, adding extra channel mixing without stacking more layers.
+
+All variants expose the same constructor signature (`d_model`, `d_state`, `conv_dilations`, etc.) and streaming helpers (`allocate_inference_cache`, `step`). Swap them simply by changing the imported class name:
+
+```python
+from lite_mamba import STCNMamba
+
+m = STCNMamba(d_model=512, d_state=16, conv_dilations=(1, 2, 4))
+```
+
+Use `DPWCMamba` for richer channel interactions in each branch, and `STCNMamba` when you want a straightforward sequential dilation pipeline (e.g., for debugging or reproducing the behavior of stacked TCN layers).
+
+### Baseline helper
+`BaselineMamba` mirrors the upstream `state-spaces/mamba` block: a single depthwise causal convolution followed by the SSM parameter projection, selective scan recurrence, and streaming helpers. `baseline_mamba` is a thin functional alias that instantiates the class with the same defaults so you can reproduce the reference layout without duplicating constructor arguments.
+
+```python
+from lite_mamba import BaselineMamba
+
+m = BaselineMamba(d_model=512, d_conv=3)
+```
 
 ## API quick reference
 `Mamba(d_model, d_state=16, d_conv=4, conv_dilations=(1,), expand=2, dt_rank="auto", dt_min=0.001, dt_max=0.1, dt_init="random", dt_scale=1.0, dt_init_floor=1e-4, conv_bias=True, bias=False, use_fast_path=False, layer_idx=None, device=None, dtype=None)`
