@@ -205,7 +205,8 @@ class TFMamba(tf.keras.layers.Layer):
         pad_left = dilation * (tf.shape(kernel)[0] - 1)
         x4 = tf.expand_dims(x, axis=1)  # (B, 1, L, D)
         x4 = tf.pad(x4, [[0, 0], [0, 0], [pad_left, 0], [0, 0]])
-        filt = tf.expand_dims(tf.transpose(kernel, [0, 1]), axis=0)  # (1, K, D)
+        # Reshape kernel from (K, D) to (1, K, D, 1) for depthwise_conv2d
+        filt = tf.expand_dims(kernel, axis=0)  # (1, K, D)
         filt = tf.expand_dims(filt, axis=-1)  # (1, K, D, 1)
         y4 = tf.nn.depthwise_conv2d(
             x4,
