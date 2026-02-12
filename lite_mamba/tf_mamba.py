@@ -202,21 +202,16 @@ class TFMamba(tf.keras.layers.Layer):
     @staticmethod
     def _causal_depthwise_conv1d(x, kernel, bias=None, dilation=1):
         # x: (B, L, D), kernel: (K, D)
-        pad_left = dilation * (tf.shape(kernel)[0] - 1)
-        x4 = tf.expand_dims(x, axis=1)  # (B, 1, L, D)
-        x4 = tf.pad(x4, [[0, 0], [0, 0], [pad_left, 0], [0, 0]])
-        # Reshape kernel from (K, D) to (1, K, D, 1) for depthwise_conv2d
-        filt = tf.expand_dims(kernel, axis=0)  # (1, K, D)
-        filt = tf.expand_dims(filt, axis=-1)  # (1, K, D, 1)
-        y4 = tf.nn.depthwise_conv2d(
-            x4,
-            filter=filt,
-            strides=[1, 1, 1, 1],
-            padding="VALID",
-            dilations=[1, 1, dilation, 1],
-            data_format="NHWC",
-        )
-        y = tf.squeeze(y4, axis=1)
+        k = kernel.shape[0]
+        pad_left = dilation * (k - 1)
+        xpad = tf.pad(x, [[0, 0], [pad_left, 0], [0, 0]])
+        seqlen = tf.shape(x)[1]
+        taps = [
+            xpad[:, i * dilation : i * dilation + seqlen, :]
+            for i in range(k)
+        ]
+        stacked = tf.stack(taps, axis=2)  # (B, L, K, D)
+        y = tf.reduce_sum(stacked * tf.reshape(kernel, [1, 1, k, -1]), axis=2)
         if bias is not None:
             y = y + tf.reshape(bias, [1, 1, -1])
         return tf.nn.silu(y)
@@ -290,9 +285,10 @@ class TFMamba(tf.keras.layers.Layer):
 
         def branch_step(x_in, state, kernel, bias, dilation, pw_layer):
             x_state = tf.concat([state[:, 1:, :], tf.expand_dims(x_in, axis=1)], axis=1)
-            k = tf.shape(kernel)[0]
+            k = kernel.shape[0]
             idx = tf.range(k - 1, -1, -1) * dilation
-            values = tf.gather(x_state, idx, axis=1)  # (B, K, D)
+            pos = tf.shape(x_state)[1] - 1 - idx
+            values = tf.gather(x_state, pos, axis=1)  # (B, K, D), oldest->newest
             y = tf.reduce_sum(values * tf.reshape(kernel, [1, k, self.d_inner]), axis=1)
             if bias is not None:
                 y = y + bias
