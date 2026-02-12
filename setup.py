@@ -34,6 +34,11 @@ setup(
         "torch>=2.0",
         "einops>=0.6",
     ],
+    extras_require={
+        "tensorflow": [
+            "tensorflow>=2.12",
+        ]
+    },
     license="Apache-2.0",
     classifiers=[
         "License :: OSI Approved :: Apache Software License",

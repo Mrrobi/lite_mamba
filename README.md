@@ -5,10 +5,17 @@
 
 A minimal, pure-PyTorch version of Mamba with a multi-dilated causal depthwise conv front-end. No CUDA/Triton build needed; works on CPU or GPU with standard PyTorch ops.
 
+It also includes a separate TensorFlow implementation of the same architectural variants so you can use TF when PyTorch/CUDA kernels are not compatible with your environment.
+
 ## Install
 ```bash
 pip install torch einops
 pip install lite-mamba
+```
+
+TensorFlow path (optional):
+```bash
+pip install "lite-mamba[tensorflow]"
 ```
 
 ## Usage
@@ -44,6 +51,23 @@ Use `DPWCMamba` for richer channel interactions in each branch, and `STCNMamba` 
 from lite_mamba import BaselineMamba
 
 m = BaselineMamba(d_model=512, d_conv=3)
+```
+
+### TensorFlow variants (separate path)
+TensorFlow classes mirror the same algorithmic layouts:
+- `TFBaselineMamba`
+- `TFPTCNMamba`
+- `TFSTCNMamba`
+- `TFDPWCMamba`
+
+```python
+import tensorflow as tf
+from lite_mamba import TFPTCNMamba
+
+x = tf.random.normal((2, 128, 512))  # (batch, seq, d_model)
+m = TFPTCNMamba(d_model=512, d_conv=3, conv_dilations=(1, 2, 4, 8))
+y = m(x)
+print(y.shape)  # (2, 128, 512)
 ```
 
 ## API quick reference
