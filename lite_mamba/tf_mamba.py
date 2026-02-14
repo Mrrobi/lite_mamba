@@ -46,19 +46,28 @@ def selective_scan_tf(
     dim = tf.shape(u)[2]
     d_state = tf.shape(A)[1]
 
-    x = tf.zeros([batch, dim, d_state], dtype=tf.float32)
-    ys = []
-
     deltaA = tf.exp(tf.einsum("bld,dn->bldn", delta, A))
     deltaB_u = tf.einsum("bld,bln,bld->bldn", delta, B, u)
 
     seqlen = tf.shape(u)[1]
-    for i in tf.range(seqlen):
+
+    # Use tf.while_loop + TensorArray for graph/XLA compatibility
+    x0 = tf.zeros([batch, dim, d_state], dtype=tf.float32)
+    ys_ta = tf.TensorArray(dtype=tf.float32, size=seqlen, dynamic_size=False)
+
+    def scan_body(i, x, ys_ta):
         x = deltaA[:, i, :, :] * x + deltaB_u[:, i, :, :]
         y = tf.einsum("bdn,bn->bd", x, C[:, i, :])
-        ys.append(y)
+        ys_ta = ys_ta.write(i, y)
+        return i + 1, x, ys_ta
 
-    y = tf.stack(ys, axis=1)
+    _, x, ys_ta = tf.while_loop(
+        cond=lambda i, *_: i < seqlen,
+        body=scan_body,
+        loop_vars=(0, x0, ys_ta),
+    )
+
+    y = tf.transpose(ys_ta.stack(), perm=[1, 0, 2])  # (L, B, D) -> (B, L, D)
     out = y if D is None else y + u * tf.reshape(D, [1, 1, -1])
     if z is not None:
         out = out * tf.nn.silu(z)
