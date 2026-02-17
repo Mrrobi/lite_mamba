@@ -51,7 +51,9 @@ def selective_scan_tf(
 
     seqlen = tf.shape(u)[1]
 
-    # Use tf.while_loop + TensorArray for graph/XLA compatibility
+    # Use tf.while_loop + TensorArray for graph/XLA/MirroredStrategy compatibility.
+    # shape_invariants are required so TF can trace through the loop even when
+    # batch/dim/d_state are dynamic (which happens under MirroredStrategy).
     x0 = tf.zeros([batch, dim, d_state], dtype=tf.float32)
     ys_ta = tf.TensorArray(dtype=tf.float32, size=seqlen, dynamic_size=False)
 
@@ -65,6 +67,11 @@ def selective_scan_tf(
         cond=lambda i, *_: i < seqlen,
         body=scan_body,
         loop_vars=(0, x0, ys_ta),
+        shape_invariants=(
+            tf.TensorShape([]),             # i: scalar
+            tf.TensorShape([None, None, None]),  # x: (batch, dim, d_state) — all dynamic
+            tf.TensorShape(None),           # TensorArray: opaque shape
+        ),
     )
 
     y = tf.transpose(ys_ta.stack(), perm=[1, 0, 2])  # (L, B, D) -> (B, L, D)
