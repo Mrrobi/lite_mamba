@@ -4,7 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lite-mamba"
-dynamic = ["version", "readme"]
+dynamic = ["version"]
+readme = {file = "README.md", content-type = "text/markdown"}
 description = "Pure-TensorFlow lightweight Mamba with multi-dilated causal conv front-end"
 authors = [
     { name = "Md Robiuddin", email = "mrrobi040@gmail.com" }
@@ -33,7 +34,6 @@ Repository = "https://github.com/Mrrobi/lite_mamba"
 
 [tool.setuptools.dynamic]
 version = {attr = "lite_mamba.__version__"}
-readme = {file = ["README.md"]}
 
 [tool.setuptools.packages.find]
 exclude = ["tests*", "docs*", "benchmarks*"]
