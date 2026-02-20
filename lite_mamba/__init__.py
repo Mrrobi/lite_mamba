@@ -1,4 +1,4 @@
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 from .tf_mamba import TFBaselineMamba as TFBaselineMamba
 from .tf_mamba import TFDPWCMamba as TFDPWCMamba

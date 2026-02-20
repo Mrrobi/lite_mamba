@@ -29,7 +29,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/Mrrobi/lite_mamba"
-Documentation = "https://gpuon.me/lite_mamba/"
+Documentation = "https://mrrobi.github.io/lite_mamba/"
 Repository = "https://github.com/Mrrobi/lite_mamba"
 
 [tool.setuptools.dynamic]
