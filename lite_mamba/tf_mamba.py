@@ -16,7 +16,7 @@ def selective_scan_tf(
     delta_softplus=False,
     return_last_state=False,
 ):
-    """TensorFlow reference selective scan.
+    """TensorFlow reference selective scan (XLA-compatible via tf.scan).
 
     Shapes:
       u: (B, L, D)
@@ -46,41 +46,44 @@ def selective_scan_tf(
     dim = tf.shape(u)[2]
     d_state = tf.shape(A)[1]
 
-    deltaA = tf.exp(tf.einsum("bld,dn->bldn", delta, A))
-    deltaB_u = tf.einsum("bld,bln,bld->bldn", delta, B, u)
+    deltaA = tf.exp(tf.einsum("bld,dn->bldn", delta, A))   # (B, L, D, N)
+    deltaB_u = tf.einsum("bld,bln,bld->bldn", delta, B, u) # (B, L, D, N)
 
-    seqlen = tf.shape(u)[1]
+    # Transpose to (L, B, D, N) / (L, B, N) so tf.scan iterates over the
+    # sequence axis (axis-0).  tf.scan does not use TensorArray internally
+    # and is fully XLA-compilable.
+    deltaA_t  = tf.transpose(deltaA,  perm=[1, 0, 2, 3])  # (L, B, D, N)
+    deltaBu_t = tf.transpose(deltaB_u, perm=[1, 0, 2, 3]) # (L, B, D, N)
+    C_t       = tf.transpose(C, perm=[1, 0, 2])            # (L, B, N)
 
-    # Use tf.while_loop + TensorArray for graph/XLA/MirroredStrategy compatibility.
-    # shape_invariants are required so TF can trace through the loop even when
-    # batch/dim/d_state are dynamic (which happens under MirroredStrategy).
     x0 = tf.zeros([batch, dim, d_state], dtype=tf.float32)
-    ys_ta = tf.TensorArray(dtype=tf.float32, size=seqlen, dynamic_size=False)
 
-    def scan_body(i, x, ys_ta):
-        x = deltaA[:, i, :, :] * x + deltaB_u[:, i, :, :]
-        y = tf.einsum("bdn,bn->bd", x, C[:, i, :])
-        ys_ta = ys_ta.write(i, y)
-        return i + 1, x, ys_ta
+    # tf.scan signature: fn(accumulator, elem) -> new_accumulator
+    # The accumulator is stacked across all steps automatically.
+    # We compute y from the stacked x afterwards (avoids needing two outputs).
+    def scan_fn(x_prev, elems):
+        dA_i, dBu_i = elems          # (B,D,N), (B,D,N)
+        x_new = dA_i * x_prev + dBu_i  # (B, D, N)
+        return x_new
 
-    _, x, ys_ta = tf.while_loop(
-        cond=lambda i, *_: i < seqlen,
-        body=scan_body,
-        loop_vars=(0, x0, ys_ta),
-        shape_invariants=(
-            tf.TensorShape([]),             # i: scalar
-            tf.TensorShape([None, None, None]),  # x: (batch, dim, d_state) — all dynamic
-            tf.TensorShape(None),           # TensorArray: opaque shape
-        ),
+    # x_all: (L, B, D, N) — SSM hidden state at every timestep
+    x_all = tf.scan(
+        fn=scan_fn,
+        elems=(deltaA_t, deltaBu_t),
+        initializer=x0,
     )
 
-    y = tf.transpose(ys_ta.stack(), perm=[1, 0, 2])  # (L, B, D) -> (B, L, D)
+    # Compute y for all timesteps in one vectorised einsum:
+    # x_all: (L, B, D, N), C_t: (L, B, N) -> ys: (L, B, D)
+    ys = tf.einsum("lbdn,lbn->lbd", x_all, C_t)
+
+    y = tf.transpose(ys, perm=[1, 0, 2])  # (L, B, D) -> (B, L, D)
     out = y if D is None else y + u * tf.reshape(D, [1, 1, -1])
     if z is not None:
         out = out * tf.nn.silu(z)
     out = tf.cast(out, dtype_in)
     if return_last_state:
-        return out, x
+        return out, x_all[-1]  # last SSM state: (B, D, N)
     return out
 
 
