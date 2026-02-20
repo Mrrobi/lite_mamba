@@ -19,7 +19,7 @@ def read_version() -> str:
 setup(
     name="lite-mamba",
     version=read_version(),
-    description="Pure-PyTorch lightweight Mamba with multi-dilated causal conv front-end",
+    description="Pure-TensorFlow lightweight Mamba with multi-dilated causal conv front-end",
     long_description=README,
     long_description_content_type="text/markdown",
     author="Md Robiuddin",
@@ -31,14 +31,8 @@ setup(
     packages=find_packages(exclude=("tests", "docs")),
     python_requires=">=3.9",
     install_requires=[
-        "torch>=2.0",
-        "einops>=0.6",
+        "tensorflow>=2.12",
     ],
-    extras_require={
-        "tensorflow": [
-            "tensorflow>=2.12",
-        ]
-    },
     license="Apache-2.0",
     classifiers=[
         "License :: OSI Approved :: Apache Software License",

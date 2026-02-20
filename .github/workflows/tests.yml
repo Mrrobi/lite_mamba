@@ -17,12 +17,12 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          python -m pip install einops numpy pytest
-          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install numpy pytest mypy
+          python -m pip install "tensorflow>=2.12"
           python -m pip install -e .
+      - name: Run mypy
+        run: |
+          mypy lite_mamba/ --ignore-missing-imports
       - name: Run tests
         run: |
           pytest -q
-      - name: Run benchmark (smoke)
-        run: |
-          python benchmarks/benchmark_mamba.py --smoke --batch 1 --seqlen 8 --d-model 32 --d-state 8 --d-conv 3 --conv-dilations 1,2
