@@ -1,12 +1,17 @@
 import pytest
 
-tf = pytest.importorskip("tensorflow")
-
 from lite_mamba import TFBaselineMamba, TFDPWCMamba, TFPTCNMamba, TFSTCNMamba
+
+tf = pytest.importorskip("tensorflow")
 
 
 def _build_models(d_model=32, d_state=8, d_conv=3, conv_dilations=(1, 2, 4)):
-    kwargs = dict(d_model=d_model, d_state=d_state, d_conv=d_conv, conv_dilations=conv_dilations)
+    kwargs = {
+        "d_model": d_model,
+        "d_state": d_state,
+        "d_conv": d_conv,
+        "conv_dilations": conv_dilations,
+    }
     return [
         TFBaselineMamba(d_model=d_model, d_state=d_state, d_conv=d_conv),
         TFPTCNMamba(**kwargs),

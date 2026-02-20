@@ -1,6 +1,9 @@
 name: tests
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -16,12 +19,18 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          python -m pip install numpy pytest mypy
+          python -m pip install numpy pytest pytest-cov mypy
           python -m pip install "tensorflow>=2.12"
           python -m pip install -e .
       - name: Run mypy
         run: |
           mypy lite_mamba/ --ignore-missing-imports
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
           pytest -q
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          fail_ci_if_error: false

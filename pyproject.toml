@@ -1,3 +1,78 @@
 [build-system]
 requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "lite-mamba"
+dynamic = ["version", "readme"]
+description = "Pure-TensorFlow lightweight Mamba with multi-dilated causal conv front-end"
+authors = [
+    { name = "Md Robiuddin", email = "mrrobi040@gmail.com" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "tensorflow>=2.12",
+]
+license = { text = "Apache-2.0" }
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://github.com/Mrrobi/lite_mamba"
+Documentation = "https://gpuon.me/lite_mamba/"
+Repository = "https://github.com/Mrrobi/lite_mamba"
+
+[tool.setuptools.dynamic]
+version = {attr = "lite_mamba.__version__"}
+readme = {file = ["README.md"]}
+
+[tool.setuptools.packages.find]
+exclude = ["tests*", "docs*", "benchmarks*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line too long, handled by black
+    "B008", # do not perform function calls in argument defaults
+    "C901", # too complex
+    "W191", # indentation contains tabs
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+addopts = "--cov=lite_mamba --cov-report=term-missing --cov-report=xml"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["lite_mamba"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

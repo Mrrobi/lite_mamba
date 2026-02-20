@@ -23,6 +23,8 @@ theme:
 
 nav:
   - Home: index.md
+  - Architecture: architecture.md
+  - API Reference: reference/api.md
 
 plugins:
   - search

@@ -1,5 +1,4 @@
 import math
-from typing import Optional
 
 import tensorflow as tf
 
@@ -46,15 +45,15 @@ def selective_scan_tf(
     dim = tf.shape(u)[2]
     d_state = tf.shape(A)[1]
 
-    deltaA = tf.exp(tf.einsum("bld,dn->bldn", delta, A))   # (B, L, D, N)
-    deltaB_u = tf.einsum("bld,bln,bld->bldn", delta, B, u) # (B, L, D, N)
+    deltaA = tf.exp(tf.einsum("bld,dn->bldn", delta, A))  # (B, L, D, N)
+    deltaB_u = tf.einsum("bld,bln,bld->bldn", delta, B, u)  # (B, L, D, N)
 
     # Transpose to (L, B, D, N) / (L, B, N) so tf.scan iterates over the
     # sequence axis (axis-0).  tf.scan does not use TensorArray internally
     # and is fully XLA-compilable.
-    deltaA_t  = tf.transpose(deltaA,  perm=[1, 0, 2, 3])  # (L, B, D, N)
-    deltaBu_t = tf.transpose(deltaB_u, perm=[1, 0, 2, 3]) # (L, B, D, N)
-    C_t       = tf.transpose(C, perm=[1, 0, 2])            # (L, B, N)
+    deltaA_t = tf.transpose(deltaA, perm=[1, 0, 2, 3])  # (L, B, D, N)
+    deltaBu_t = tf.transpose(deltaB_u, perm=[1, 0, 2, 3])  # (L, B, D, N)
+    C_t = tf.transpose(C, perm=[1, 0, 2])  # (L, B, N)
 
     x0 = tf.zeros([batch, dim, d_state], dtype=tf.float32)
 
@@ -62,7 +61,7 @@ def selective_scan_tf(
     # The accumulator is stacked across all steps automatically.
     # We compute y from the stacked x afterwards (avoids needing two outputs).
     def scan_fn(x_prev, elems):
-        dA_i, dBu_i = elems          # (B,D,N), (B,D,N)
+        dA_i, dBu_i = elems  # (B,D,N), (B,D,N)
         x_new = dA_i * x_prev + dBu_i  # (B, D, N)
         return x_new
 
@@ -196,7 +195,7 @@ class TFMamba(tf.keras.layers.Layer):
             for pw in self.pw_layers:
                 pw.build((None, None, self.d_inner))
 
-        dt_init_std = (self.dt_rank ** -0.5) * self.dt_scale
+        dt_init_std = (self.dt_rank**-0.5) * self.dt_scale
         if self.dt_init == "constant":
             kernel = tf.fill([self.dt_rank, self.d_inner], tf.cast(dt_init_std, tf.float32))
         elif self.dt_init == "random":
@@ -212,7 +211,9 @@ class TFMamba(tf.keras.layers.Layer):
 
         log_min = math.log(self.dt_min)
         log_max = math.log(self.dt_max)
-        dt = tf.exp(tf.random.uniform([self.d_inner], minval=log_min, maxval=log_max, dtype=tf.float32))
+        dt = tf.exp(
+            tf.random.uniform([self.d_inner], minval=log_min, maxval=log_max, dtype=tf.float32)
+        )
         dt = tf.maximum(dt, self.dt_init_floor)
         inv_dt = dt + tf.math.log(-tf.math.expm1(-dt))
         self.dt_proj.bias.assign(inv_dt)
@@ -225,10 +226,7 @@ class TFMamba(tf.keras.layers.Layer):
         pad_left = dilation * (k - 1)
         xpad = tf.pad(x, [[0, 0], [pad_left, 0], [0, 0]])
         seqlen = tf.shape(x)[1]
-        taps = [
-            xpad[:, i * dilation : i * dilation + seqlen, :]
-            for i in range(k)
-        ]
+        taps = [xpad[:, i * dilation : i * dilation + seqlen, :] for i in range(k)]
         stacked = tf.stack(taps, axis=2)  # (B, L, K, D)
         y = tf.reduce_sum(stacked * tf.reshape(kernel, [1, 1, k, -1]), axis=2)
         if bias is not None:
