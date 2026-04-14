@@ -1,5 +1,4 @@
 # lite-mamba
-
 [![Publish Python Package](https://github.com/Mrrobi/lite_mamba/actions/workflows/publish.yml/badge.svg)](https://github.com/Mrrobi/lite_mamba/actions/workflows/publish.yml)
 [![Tests](https://github.com/Mrrobi/lite_mamba/actions/workflows/tests.yml/badge.svg)](https://github.com/Mrrobi/lite_mamba/actions/workflows/tests.yml)
 [![Documentation](https://img.shields.io/badge/docs-mrrobi.github.io-blue.svg)](https://mrrobi.github.io/lite_mamba/)
